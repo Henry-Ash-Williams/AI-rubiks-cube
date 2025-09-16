@@ -2,6 +2,7 @@
 # checks for 3x3 category, and for a correct solution
 
 import json
+import os
 import re
 from enum import StrEnum
 
@@ -11,7 +12,16 @@ from bs4 import BeautifulSoup
 from random_user_agent.user_agent import UserAgent
 from random_user_agent.params import SoftwareName, OperatingSystem
 from rich.console import Console
-from rich.progress import track
+from rich.progress import (
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeElapsedColumn,
+    TimeRemainingColumn,
+    TaskProgressColumn,
+    BarColumn,
+    MofNCompleteColumn,
+)
 
 
 SOLVED_CUBE_STR = "OOOOOOOOOYYYWWWGGGBBBYYYWWWGGGBBBYYYWWWGGGBBBRRRRRRRRR"
@@ -301,14 +311,45 @@ if __name__ == "__main__":
         limit=1000,
     )
     reconstructions = []
+    if os.path.exists("solves.json"):
+        with open("solves.json", "r") as f:
+            curr_solves = json.load(f)
+        urls = [solve["url"] for solve in curr_solves]
+        reconstructions.extend(curr_solves)
 
-    try:
-        for id in track(range(START_ID, END_ID), console=console):
-            try:
-                r = scrape(id)
-                reconstructions.append(r)
-            except Exception as e:
-                console.log(f"Error processing item {id}: {e}")
-    finally:
-        with open("solves.json", "w") as file:
-            json.dump([r.to_dict() for r in reconstructions], file)
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TaskProgressColumn(),
+        MofNCompleteColumn(),
+        TimeElapsedColumn(),
+        TextColumn("/"),
+        TimeRemainingColumn(),
+        console=console,
+        expand=True,
+    ) as p:
+        task = p.add_task("Downloading", total=END_ID, completed=START_ID)
+        try:
+            for id in range(START_ID, END_ID):
+                p.advance(task)
+                if URL.format(id) in urls:
+                    console.log(f"Already processed item: {id}, skipping...")
+                    continue
+                try:
+                    r = scrape(id)
+                    reconstructions.append(r)
+                except Exception as e:
+                    console.log(f"Error processing item {id}: {e}")
+        except Exception as e:
+            console.log(f"Error in main loop: {e}")
+        finally:
+            console.log("Saving data")
+            with open("solves.json", "w") as file:
+                json.dump(
+                    [
+                        r.to_dict() if isinstance(r, Reconstruction) else r
+                        for r in reconstructions
+                    ],
+                    file,
+                )
