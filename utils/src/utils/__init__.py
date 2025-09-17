@@ -1,3 +1,4 @@
+import random
 import re
 from enum import StrEnum
 
@@ -227,6 +228,38 @@ class MoveSequence:
     def __iter__(self):
         for move in self.moves:
             yield move
+
+    @classmethod
+    def random_sequence(cls: "MoveSequence", n_moves: int = 20) -> "MoveSequence":
+        # Generate a random sequence of moves
+
+        # TODO: Post-process this sequence so that a move followed by its
+        # inverse are removed?
+
+        invalid_moves = [
+            Move.X,
+            Move.X2,
+            Move.InvX,
+            Move.InvX2,
+            Move.Y,
+            Move.Y2,
+            Move.InvY,
+            Move.InvY2,
+            Move.Z,
+            Move.Z2,
+            Move.InvZ,
+            Move.InvZ2,
+        ]
+        seq = []
+        while len(seq) < n_moves:
+            random_move = random.choice(list(Move))
+
+            if random_move not in invalid_moves:
+                seq.append(random_move)
+
+        new_seq = cls(moves="")
+        new_seq.moves = seq
+        return new_seq
 
 
 class Reconstruction:

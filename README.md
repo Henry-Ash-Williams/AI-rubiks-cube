@@ -11,11 +11,16 @@
 > Given a sequence of scramble + solve, can we determine if it will produce a solved cube or not? 
 
 - LSTM - No, see `notebooks/lstm-is-solved.ipynb` 
-- (TODO) Transformer approach 
+- BERT - In progress 
 
 ### [TODO] Solve 
 
 > Given a scramble, can we produce a sequence of moves that will result in a solved cube?
+
+#### Plan 
+
+1. MaskedLM on solution sequence for a given scramble 
+2. Next sentence prediction using pretrained model  
 
 ### [TODO] Reverse Scramble 
 
@@ -25,4 +30,5 @@
 
 - [ ] Make a way to display a cube with a given permutation
 - [ ] Better synthetic data generation 
+- [ ] Better random move sequence generation 
 - [ ] Extend beyond 3x3 solves? 
